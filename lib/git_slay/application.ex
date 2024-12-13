@@ -9,7 +9,6 @@ defmodule GitSlay.Application do
   def start(_type, _args) do
     children = [
       GitSlayWeb.Telemetry,
-      GitSlay.Repo,
       {DNSCluster, query: Application.get_env(:git_slay, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: GitSlay.PubSub},
       # Start the Finch HTTP client for sending emails

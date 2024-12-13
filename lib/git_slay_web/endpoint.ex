@@ -7,7 +7,7 @@ defmodule GitSlayWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_git_slay_key",
-    signing_salt: "aadsqxB9",
+    signing_salt: "xDH8ZO0B",
     same_site: "Lax"
   ]
 
@@ -31,7 +31,6 @@ defmodule GitSlayWeb.Endpoint do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
-    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :git_slay
   end
 
   plug Phoenix.LiveDashboard.RequestLogger,

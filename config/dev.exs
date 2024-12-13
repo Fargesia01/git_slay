@@ -1,15 +1,5 @@
 import Config
 
-# Configure your database
-config :git_slay, GitSlay.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  database: "git_slay_dev",
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 10
-
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -23,7 +13,7 @@ config :git_slay, GitSlayWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "U2H+NmEszSlsVzLJu9m4P6w+Lqic60dQwHdYTEhoQYOsFowob6cy6AzHfBkvgqVk",
+  secret_key_base: "z5tVy7tL4v2+BsIxeLM065I2+wO3Yc7Y11KCuPT9BeqHWvPn4R97qx5XvyYRZp/e",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:git_slay, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:git_slay, ~w(--watch)]}

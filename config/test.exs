@@ -1,23 +1,10 @@
 import Config
 
-# Configure your database
-#
-# The MIX_TEST_PARTITION environment variable can be used
-# to provide built-in test partitioning in CI environment.
-# Run `mix help test` for more information.
-config :git_slay, GitSlay.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  database: "git_slay_test#{System.get_env("MIX_TEST_PARTITION")}",
-  pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: System.schedulers_online() * 2
-
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :git_slay, GitSlayWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "GBQN1/hCDN+BLXg4UeMp33zpUj/0gvfyZNnhy0+LMivpPTXLK0aXBm+H/QSzLbPy",
+  secret_key_base: "NsOVT0z1T3zWGwWgPk4Xi4IJiT2GmD2f5D6kznAK7ZpbOlJ9mV0ZiB89uQldS8xh",
   server: false
 
 # In test we don't send emails

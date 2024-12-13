@@ -8,7 +8,6 @@
 import Config
 
 config :git_slay,
-  ecto_repos: [GitSlay.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint
@@ -20,7 +19,7 @@ config :git_slay, GitSlayWeb.Endpoint,
     layout: false
   ],
   pubsub_server: GitSlay.PubSub,
-  live_view: [signing_salt: "/PhSnPJD"]
+  live_view: [signing_salt: "Iyd8p86V"]
 
 # Configures the mailer
 #
