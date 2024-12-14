@@ -20,10 +20,11 @@ defmodule GitSlayWeb.Router do
     get "/", PageController, :home
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", GitSlayWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", GitSlayWeb do
+    pipe_through :api
+    
+    get "/read-file", PageController, :read_file
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:git_slay, :dev_routes) do
