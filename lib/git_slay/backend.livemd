@@ -137,29 +137,30 @@ defmodule BackEnd do
     function for seding message through network (phoenix)
   """
 
-  @projectPath File.cwd() <> "../"
+  @filesPath (__ENV__.file |> String.split("lib/") |> hd()) <> "priv/"
+  @record "record.csv"
+  @splitChars "--"
 
   @doc """
   private function to keep the process alive and handle actions to take
   """
   defp be(record, ui) do
     receive do
-      # this part is for group handling
-      # member left the group
-      {pid, :leftthechat} ->
-        send(ui, {pid, :leftTheChat})
-        be(record, ui)
-
       # this part is for responding to files requests
       # request for versions of a file
       {file} ->
-        send(ui, {:toAnswerRquest})
+        list = Path.wildcard(@filesPath <> "files/#{file}.*")
+
+        if list != [] do
+          send(ui, {:toAnswerRquest})
+        end
+
         be(record, ui)
 
       # request for a specific file and version
       {file, ver} ->
-        if File.exists?(@cwdPath <> file <> ver) do
-          {:ok, fileBin} = File.read(@cwdPath <> file)
+        if File.exists?(@filesPath <> file <> ver) do
+          {:ok, fileBin} = File.read(@filesPath <> file)
           send(ui, {file, ver, fileBin})
         end
 
@@ -174,28 +175,32 @@ defmodule BackEnd do
       # response with the data of the file asked
       {file, ver, contents} ->
         # save the file in directory and generate a working version
-        File.write(@cwdPath <> file <> ver, contents)
+        File.write(@filesPath <> file <> ver, contents)
 
         send(ui, {file, ver, contents})
         be(record, ui)
     end
   end
 
-  def createRecord() do
-    File.touch()
-  end
-
   @doc """
   public function to create a process with the given arguments.
   """
-  def init(group, uiPID) do
+  def init(uiPID) do
     if !File.exists?("record.txt") do
-      createRecord()
+      File.touch(@filesPath <> @record)
     end
 
-    {:ok, recordBin} = File.open!("record.txt")
+    record =
+      Path.wildcard(@filesPath <> "files/*")
+      |> Enum.filter(&File.regular?(&1))
+      |> Enum.reduce(%{}, fn f, acc ->
+        [fileName, version] = Path.rootname(f) |> String.split(@splitChars, parts: 2)
+
+        # Update the map: if fileName already exists, append version to the list, otherwise create a new list with the version
+        Map.update(acc, fileName, [version], fn versions -> [version | versions] end)
+      end)
     
-    spawn(__MODULE__, :be, [group, record, uiPID])
+    spawn(__MODULE__, :be, [record, uiPID])
   end
 end
 ```
