@@ -27,8 +27,8 @@ defmodule Client.Application do
 
   defp register_client do 
     client_id = "web_client_#{:rand.uniform(1000)}"
-    ip = "127.0.0.1"
-    url = "http://127.0.0.1:5000/api/register"
+    ip  = "127.0.0.1"
+    url = "http://192.168.1.11:5000/api/register"
 
     body = Jason.encode!(%{
       "client_id" => client_id,
