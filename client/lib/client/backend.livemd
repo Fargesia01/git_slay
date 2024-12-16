@@ -1,0 +1,201 @@
+# BackEnd
+
+```elixir
+defmodule VectorClock do
+  @moduledoc """
+  Vector clock library for Elixir.
+
+  ## About
+
+  Vector clocks are used in distributed systems as a way of maintaining a
+  logical ordering of events. A vector clock consists of a list of entries, each
+  of which represents a node in a distributed system. A node entry consists of a
+  name (unique identifier) and a timestamp. When a node sends an event to another
+  node, it increments its timestamp in its vector clock and sends the clock along
+  with the message. A node receiving a message can determine whether it has seen
+  the effect of that message already by comparing its vector clock with the
+  received vector clock.
+
+  This module only contains the minimal set of functions for creating, updating
+  comparing vector clocks. It was intentionally kept as simple as possible and
+  misses many functions (e.g., min, max, length) helpful in developing
+  real-world applications.
+
+  ## Source
+
+  This code was partly borrowed from several sources on the Internet (which I
+  could not track down). It solely serves as an example as part of teaching
+  material. The original sources should be recovered and cited if used in any
+  other context.
+
+  ## References
+
+  Leslie Lamport (1978).
+  [Time, clocks, and the ordering of events in a distributed system](https://doi.org/10.1145/359545.359563).
+  Communications of the ACM 21 (7): 558-565.
+
+  Friedemann Mattern (1988).
+  [Virtual Time and Global States of Distributed Systems](https://nylas.github.io/paper-reading-group/papers/Virtual_Time.pdf).
+  Workshop on Parallel and Distributed Algorithms.
+  """
+
+  @doc """
+  Create a new vector clock for a list of nodes (or a single node) with timestamps initialised to `time` (0 by default).
+  """
+  def create(nodes, time \\ 0) do
+    Map.new((if is_list(nodes), do: nodes, else: [nodes]), fn n -> {n, time} end)
+  end
+
+  @doc """
+  Set the value of `vc` timestamp at `node` to `time`.
+  """
+  def set(vc, node, time) do
+    Map.put(vc, node, time)
+  end
+
+  @doc """
+  Get the value of `vc` timestamp at `node`.
+  """
+  def get(vc, node) do
+    Map.get(vc, node, 0)
+  end
+
+  @doc """
+  Increment `vc` timestamp at `node` by `step` (1 by default).
+  """
+  def increment(vc, node, step \\ 1) do
+    set(vc, node, get(vc, node) + step)
+  end
+
+  @doc """
+  Merge two vector clocks, `vc_a` and `vc_b`, by combining the maximum of each entry.
+  """
+  def merge(vc_a, vc_b) do
+    Map.merge(vc_a, vc_b, fn _k, v1, v2 -> max(v1, v2) end)
+  end
+
+  @doc """
+  Compare two vector clocks, `vc_a` and `vc_b`, according to the following rules.
+  * `vc_a` is **less** than `vc_b` if and only if:
+    1. for all i, `vc_a[i] <= vc_b[i]`; and
+    2. there exists j such that `vc_a[j] < vc_b[j]`.
+  * `vc_a` is **greater** than `vc_b` if `vc_b` is less than `vc_a`.
+  * `vc_a` and `vc_b` are **equal** if for all i, `vc_a[i] == vc_b[i]` (and conversely).
+  * `vc_a` and `vc_b` are **concurrent** if `vc_a` is not equal to, less than, or greater than `vc_b`.
+
+  If a node is present in one of the vector clocks only, we assume its timestamp is 0 in the other.
+  """
+  def compare(vc_a, vc_b) do
+    # Augment vector clock with missing keys (from other vector clock)
+    a = Map.merge(Map.new(Map.keys(vc_b), fn k -> {k, 0} end), vc_a)
+    b = Map.merge(Map.new(Map.keys(vc_a), fn k -> {k, 0} end), vc_b)
+
+    cond do
+      lt?(a, b) -> :less
+      lt?(b, a) -> :greater
+      eq?(a, b) -> :equal
+      cc?(a, b) -> :concurrent
+    end
+  end
+
+  defp lt?(vc_a, vc_b) do
+    for_all = Enum.all?(vc_a, fn {node, time} -> time <= vc_b[node] end)
+    exists = Enum.any?(vc_a, fn {node, time} -> time < vc_b[node] end)
+    for_all and exists
+  end
+
+  defp eq?(vc_a, vc_b) do
+    not Enum.any?(vc_a, fn {node, time} -> time != vc_b[node] end)
+  end
+
+  defp cc?(vc_a, vc_b) do
+    not (lt?(vc_a, vc_b) or lt?(vc_b, vc_a) or eq?(vc_a, vc_b))
+  end
+end
+
+defmodule COVC do
+  
+end
+```
+
+## Section
+
+```elixir
+defmodule BackEnd do
+  @moduledoc """
+  Ce module sert à représenter toutes les actions qui devront être prises en charge par les utilisateurs individuellement.
+  Les différentes responsabilités sont :      
+    tenir à jour les membres du groupe de multicast (aussi rejoindre et quitter)
+    gérer les demandes d'existance de document (donc recevoir les messages et répondre avec les versions ou nil)
+    gérer les demandes d'envoi de document (donc fichier spécifique demandé)
+    gérer les envois de demande de documents (donc quelles versions existent et recevoir le document demandé)      
+
+  need interaction with UI for :
+    function for joining/leaving group
+    function for requesting document
+    function for displaying info about the versions
+    function for seding message through network (phoenix)
+  """
+
+  @projectPath File.cwd() <> "../"
+
+  @doc """
+  private function to keep the process alive and handle actions to take
+  """
+  defp be(record, ui) do
+    receive do
+      # this part is for group handling
+      # member left the group
+      {pid, :leftthechat} ->
+        send(ui, {pid, :leftTheChat})
+        be(record, ui)
+
+      # this part is for responding to files requests
+      # request for versions of a file
+      {file} ->
+        send(ui, {:toAnswerRquest})
+        be(record, ui)
+
+      # request for a specific file and version
+      {file, ver} ->
+        if File.exists?(@cwdPath <> file <> ver) do
+          {:ok, fileBin} = File.read(@cwdPath <> file)
+          send(ui, {file, ver, fileBin})
+        end
+
+        be(record, ui)
+
+      # this part is for asking for files and versions
+      # response of which version is available
+      {availableFiles} ->
+        send(ui, availableFiles)
+        be(record, ui)
+
+      # response with the data of the file asked
+      {file, ver, contents} ->
+        # save the file in directory and generate a working version
+        File.write(@cwdPath <> file <> ver, contents)
+
+        send(ui, {file, ver, contents})
+        be(record, ui)
+    end
+  end
+
+  def createRecord() do
+    File.touch()
+  end
+
+  @doc """
+  public function to create a process with the given arguments.
+  """
+  def init(group, uiPID) do
+    if !File.exists?("record.txt") do
+      createRecord()
+    end
+
+    {:ok, recordBin} = File.open!("record.txt")
+    
+    spawn(__MODULE__, :be, [group, record, uiPID])
+  end
+end
+```
