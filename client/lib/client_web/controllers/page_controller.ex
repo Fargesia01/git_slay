@@ -2,15 +2,8 @@ defmodule ClientWeb.PageController do
   use ClientWeb, :controller
 
   def home(conn, _params) do
-    render(conn, :home, layout: false)
-  end
-
-  def read_file(conn, _params) do
-    case Client.FileReader.read_file() do
-      {:ok, content} -> 
-        json(conn, %{content: content})
-      {:error, reason} -> 
-        json(conn, %{error: "Failed to read file: #{inspect(reason)}"})
-    end
+    local_files = Client.Backend.list_local_files()
+    all_files = Client.Backend.list_all_files()
+    render(conn, :home, local_files: local_files, all_files: all_files)
   end
 end

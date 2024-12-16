@@ -1,19 +1,27 @@
-<h1>Welcome to GitSlay!</h1>
+<h2 class="font-normal text-xl text-amber-950">
+  Here are all the files stored locally:
+</h2>
 
-<p>The following message is read from the back:</p>
+<ul class="mt-4 list-disc pl-6">
+  <%= for file <- @local_files do %>
+    <li class="text-lg text-gray-700"><%= file %></li>
+  <% end %>
+</ul>
 
-<p id="file-content">Loading...</p>
+<button type="button" class="focus:outline-none text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:focus:ring-yellow-900">
+  Pull most recent version
+</button>
 
-<script>
-  fetch('/api/read-file')
-    .then(response => response.json())
-    .then(data => {
-      const fileContent = document.getElementById('file-content');
-      fileContent.textContent = data.content;
-    })
-    .catch(error => {
-      const fileContent = document.getElementById('file-content');
-      fileContent.textContent = 'Failed to load file content.';
-      console.error('Error:', error);
-    });
-</script>
+<button type="button" class="focus:outline-none text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:focus:ring-yellow-900">
+  Pull specific version
+</button>
+
+<h2 class="font-normal text-xl text-amber-950">
+  Here are all the files stored on the network:
+</h2>
+
+<ul class="mt-4 list-disc pl-6">
+  <%= for file <- @all_files do %>
+    <li class="text-lg text-gray-700"><%= file %></li>
+  <% end %>
+</ul>
