@@ -125,82 +125,80 @@ defmodule BackEnd do
   @moduledoc """
   Ce module sert à représenter toutes les actions qui devront être prises en charge par les utilisateurs individuellement.
   Les différentes responsabilités sont :      
-    tenir à jour les membres du groupe de multicast (aussi rejoindre et quitter)
     gérer les demandes d'existance de document (donc recevoir les messages et répondre avec les versions ou nil)
     gérer les demandes d'envoi de document (donc fichier spécifique demandé)
     gérer les envois de demande de documents (donc quelles versions existent et recevoir le document demandé)      
 
   need interaction with UI for :
-    function for joining/leaving group
     function for requesting document
     function for displaying info about the versions
-    function for seding message through network (phoenix)
   """
 
-  @filesPath (__ENV__.file |> String.split("lib/") |> hd()) <> "priv/"
-  @record "record.csv"
   @splitChars "--"
+  @filesPath (__ENV__.file |> String.split("lib/") |> hd()) <> "priv/files/"
+  @record Path.wildcard(@filesPath <> "commit/*")
+          |> Enum.filter(&File.regular?(&1))
+          |> Enum.reduce(%{}, fn f, acc ->
+            [fileName, version] = Path.rootname(f) |> String.split(@splitChars, parts: 2)
+
+            Map.update(acc, fileName, [version], fn versions -> [version | versions] end)
+          end)
+  # define by calling server with http
+  @mostRecentVersions
+
+  # Segment of functions acting as endpoints for the page controller
+  @doc """
+  Returns all files that are saved locally
+  """
+  def getAllFiles() do
+    for key <- @record, into: %{}, do: {key, Enum.max(Map.get(@record, key))}
+    # check if I have to put it in a list or do 2 functions
+  end
 
   @doc """
-  private function to keep the process alive and handle actions to take
+  Returns all the versions of the given file that are saved locally.
   """
-  defp be(record, ui) do
-    receive do
-      # this part is for responding to files requests
-      # request for versions of a file
-      {file} ->
-        list = Path.wildcard(@filesPath <> "files/#{file}.*")
-
-        if list != [] do
-          send(ui, {:toAnswerRquest})
-        end
-
-        be(record, ui)
-
-      # request for a specific file and version
-      {file, ver} ->
-        if File.exists?(@filesPath <> file <> ver) do
-          {:ok, fileBin} = File.read(@filesPath <> file)
-          send(ui, {file, ver, fileBin})
-        end
-
-        be(record, ui)
-
-      # this part is for asking for files and versions
-      # response of which version is available
-      {availableFiles} ->
-        send(ui, availableFiles)
-        be(record, ui)
-
-      # response with the data of the file asked
-      {file, ver, contents} ->
-        # save the file in directory and generate a working version
-        File.write(@filesPath <> file <> ver, contents)
-
-        send(ui, {file, ver, contents})
-        be(record, ui)
+  def getAllVersions(file) do
+    try do
+      Map.fetch!(@record, file)
+    rescue
+      KeyError -> nil
     end
   end
 
   @doc """
-  public function to create a process with the given arguments.
+  Returns the data of the given file and version.
   """
-  def init(uiPID) do
-    if !File.exists?("record.txt") do
-      File.touch(@filesPath <> @record)
+  def getFileWithVersion(file, ver) do
+    try do
+      File.read!(@filesPath <> "commit/#{file}#{@splitChars}#{ver}")
+    rescue
+      File.Error -> nil
+    end
+  end
+
+  @doc """
+  Saves the given file and version locally. Returns #{:ok} if successful, #{nil} otherwise
+  """
+  def saveFile(path \\ @filesPath <> "commit/", file, ver, data) do
+    File.write!(path <> "#{file}#{@splitChars}#{ver}", data)
+  end
+
+  def pull(file, ver \\ nil) do
+    if ver == nil do
+      Enum.max(Map.get(@mostRecentVersions, file))
     end
 
-    record =
-      Path.wildcard(@filesPath <> "files/*")
-      |> Enum.filter(&File.regular?(&1))
-      |> Enum.reduce(%{}, fn f, acc ->
-        [fileName, version] = Path.rootname(f) |> String.split(@splitChars, parts: 2)
+    data =
+      try do
+        File.read!(@filesPath <> "commit/#{file}#{@splitChars}#{ver}")
+      rescue
+        # add getting the response for the file form http
+        File.Error -> nil
+      end
 
-        # Update the map: if fileName already exists, append version to the list, otherwise create a new list with the version
-        Map.update(acc, fileName, [version], fn versions -> [version | versions] end)
-      end)
-    
-    spawn(__MODULE__, :be, [record, uiPID])
+    saveFile(file, ver, data)
+    File.cp!(@filesPath <> "commit/#{file}#{@splitChars}#{ver}", @filesPath <> "user/#{file}")
   end
 end
 ```
