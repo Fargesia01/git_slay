@@ -23,7 +23,7 @@ defmodule ClientWeb.Router do
   scope "/api", ClientWeb do
     pipe_through :api
 
-    get "/read-file", PageController, :read_file
+    post "/shutdown", PageController, :shutdown
   end
 
   # Other scopes may use custom stacks.

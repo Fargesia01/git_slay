@@ -29,3 +29,24 @@
     <li class="text-lg text-gray-700"><%= file %></li>
   <% end %>
 </ul>
+
+<button id="shutdown" type="button" class="focus:outline-none text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:focus:ring-yellow-900">
+  Shutdown the app
+</button>
+
+<script>
+  document.getElementById('shutdown').addEventListener('click', function() {
+    fetch('/api/shutdown', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => {
+      if (response.ok) {
+        console.log('Shutdown started');
+      } else {
+        console.error('Failed to shutdown the app');
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+</script>

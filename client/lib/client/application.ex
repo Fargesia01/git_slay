@@ -25,6 +25,7 @@ defmodule Client.Application do
     Supervisor.start_link(children, opts)
   end
 
+  # Automatically registers the client on startup
   defp register_client do 
     ip  = "127.0.0.1"
     url = "http://192.168.1.11:5000/api/register"
@@ -38,6 +39,7 @@ defmodule Client.Application do
         case Jason.decode(body) do
           {:ok, %{"client_id" => client_id}} ->
             IO.puts("Successfully registered client #{client_id}")
+            Application.put_env(:client, :client_id, client_id)
           {:error, reason} -> 
             IO.puts("Failed to parse client ID: #{inspect(reason)}")
         end

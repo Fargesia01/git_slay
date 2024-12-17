@@ -18,6 +18,10 @@ defmodule Server.CentralServer do
     GenServer.call({:global, __MODULE__}, {:register_client, ip})
   end
 
+  def unregister_client(client_id) do
+    GenServer.call({:global, __MODULE__}, {:unregister_client, client_id})
+  end
+
   def list_clients do
     GenServer.call({:global, __MODULE__}, :list_clients)
   end
@@ -31,6 +35,14 @@ defmodule Server.CentralServer do
     IO.puts("Registered client: #{client_id} with IP: #{ip}")
 
     {:reply, client_id, new_state}
+  end
+
+  @impl true
+  def handle_call({:unregister_client, client_id}, _from, state) do
+    new_clients = Map.delete(state.clients, client_id)
+    new_state = %{state | clients: new_clients}
+    IO.puts("Unregistered client: #{client_id}")
+    {:reply, :ok, new_state}
   end
 
   @impl true
