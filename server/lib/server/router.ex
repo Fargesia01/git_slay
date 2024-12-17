@@ -6,9 +6,9 @@ defmodule Server.Router do
 
   post "/api/register" do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
-    %{"client_id" => client_id, "ip" => ip} = Jason.decode!(body)
-    Server.CentralServer.register_client(client_id, ip)
-    send_resp(conn, 200, Jason.encode!(%{status: "ok", message: "Client registered successfully"}))
+    %{"ip" => ip} = Jason.decode!(body)
+    client_id = Server.CentralServer.register_client(ip)
+    send_resp(conn, 200, Jason.encode!(%{status: "ok", client_id: client_id}))
   end
 
   get "/api/clients" do

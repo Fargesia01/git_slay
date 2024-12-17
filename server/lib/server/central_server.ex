@@ -6,12 +6,16 @@ defmodule Server.CentralServer do
   end
 
   @impl true
-  def init(state) do
-    {:ok, state}
+  def init(_state) do
+    initiale_state = %{
+      counter: 0,
+      clients: %{}
+    }
+    {:ok, initiale_state}
   end
 
-  def register_client(client_id, ip) do
-    GenServer.call({:global, __MODULE__}, {:register_client, client_id, ip})
+  def register_client(ip) do
+    GenServer.call({:global, __MODULE__}, {:register_client, ip})
   end
 
   def list_clients do
@@ -19,10 +23,14 @@ defmodule Server.CentralServer do
   end
 
   @impl true
-  def handle_call({:register_client, client_id, ip}, _from, state) do
-    new_state = Map.put(state, client_id, ip)
+  def handle_call({:register_client, ip}, {from_pid, _}, state) do
+    client_id = "client_#{state.counter + 1}"
+    new_clients = Map.put(state.clients, client_id, %{ip: ip, pid: from_pid})
+    new_state = %{state | counter: state.counter + 1, clients: new_clients}
+
     IO.puts("Registered client: #{client_id} with IP: #{ip}")
-    {:reply, :ok, new_state}
+
+    {:reply, client_id, new_state}
   end
 
   @impl true
