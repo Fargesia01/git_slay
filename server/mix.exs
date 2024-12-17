@@ -23,7 +23,8 @@ defmodule Server.MixProject do
   defp deps do
     [
       {:plug_cowboy, "~> 2.5"},
-      {:jason, "~> 1.2"}
+      {:jason, "~> 1.2"},
+      {:httpoison, "~> 1.8"}
     ]
   end
 end

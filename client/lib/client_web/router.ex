@@ -24,6 +24,8 @@ defmodule ClientWeb.Router do
     pipe_through :api
 
     post "/shutdown", PageController, :shutdown
+    post "/list-local-files", PageController, :list_local_files
+    post "/file-list-response", PageController, :file_list_response
   end
 
   # Other scopes may use custom stacks.

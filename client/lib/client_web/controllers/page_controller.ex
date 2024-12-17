@@ -13,6 +13,19 @@ defmodule ClientWeb.PageController do
     System.halt(0)
   end
 
+  def list_local_files(conn, _params) do
+    file_list = Client.Backend.list_local_files()
+    IO.puts("Client sending file list: #{inspect(file_list)}")
+
+    Client.Backend.send_file_list_to_server(file_list)
+    json(conn, %{status: "ok", files: file_list})
+  end
+
+  def file_list_response(conn, %{"files" => files}) do
+    IO.puts("Files accross network received: #{inspect(files)}")
+    json(conn, %{status: "ok"})
+  end
+
   # Unregister the client when app shuts down
   defp unregister_client do
     client_id = Application.get_env(:client, :client_id)
