@@ -1,0 +1,33 @@
+<header class="px-4 sm:px-6 lg:px-8">
+  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
+    <div class="flex items-center gap-4">
+      <a href="/" class="flex items-center gap-2">
+        <h1 class="mt-0 text-3xl font-extrabold text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
+          <span class="text-transparent bg-clip-text bg-gradient-to-r to-orange-300 from-orange-700">
+            GitSlay
+          </span>
+        </h1>
+        <img src={~p"/images/GitSlayLogo.png"} width="70"/>
+      </a>
+      <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
+        v42.42
+      </p>
+    </div>
+    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+      <a href="https://github.com/Fargesia01/git_slay" class="hover:text-zinc-700">
+        GitHub
+      </a>
+      <a
+        class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
+      >
+        Sylvain Lott & Arnaud Haizmann Inc.
+      </a>
+    </div>
+  </div>
+</header>
+<main class="px-4 py-4 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-full">
+    <.flash_group flash={@flash} />
+    <%= @inner_content %>
+  </div>
+</main>
