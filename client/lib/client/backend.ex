@@ -13,8 +13,8 @@ defmodule Client.Backend do
           end)
   @url "http://192.168.1.11:5000/api/"
 
-  def list_local_files do
-    ["README.md", "project.ex", "notes.txt", "design.png"] 
+  def list_local_files() do
+    for f <- Path.wildcard(@filesPath <> "user/*"), File.regular?(f), do: f
   end
 
   def list_all_files do
@@ -23,7 +23,7 @@ defmodule Client.Backend do
 
   def commit(file) do
     remote_files = Application.get_env(:client, :remote_files)
-    mr_v = Map.get(remote_files, file, 0)
+    mr_v = Map.get(remote_files, file, -1) + 1
 
     data =
       try do
