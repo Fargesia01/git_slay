@@ -4,7 +4,17 @@ defmodule Client.Backend do
   """
 
   def list_local_files do
-    ["README.md", "project.ex", "notes.txt", "design.png"] 
+    ["READMEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE.md", "project.ex", "notes.txt", "design.png", "slkdjfsld.fsdf", "klsjdf", "sdfsd,fms", "slkdjfslkdjf",
+      "README.md", "project.ex", "notes.txt", "design.png", "slkdjfsld.fsdf", "klsjdf", "sdfsd,fms", "slkdjfslkdjf",
+      "README.md", "project.ex", "notes.txt", "design.png", "slkdjfsld.fsdf", "klsjdf", "sdfsd,fms", "slkdjfslkdjf",
+      "README.md", "project.ex", "notes.txt", "design.png", "slkdjfsld.fsdf", "klsjdf", "sdfsd,fms", "slkdjfslkdjf",
+      "README.md", "project.ex", "notes.txt", "design.png", "slkdjfsld.fsdf", "klsjdf", "sdfsd,fms", "slkdjfslkdjf",
+      "README.md", "project.ex", "notes.txt", "design.png", "slkdjfsld.fsdf", "klsjdf", "sdfsd,fms", "slkdjfslkdjf",
+      "README.md", "project.ex", "notes.txt", "design.png", "slkdjfsld.fsdf", "klsjdf", "sdfsd,fms", "slkdjfslkdjf",
+      "README.md", "project.ex", "notes.txt", "design.png", "slkdjfsld.fsdf", "klsjdf", "sdfsd,fms", "slkdjfslkdjf",
+      "README.md", "project.ex", "notes.txt", "design.png", "slkdjfsld.fsdf", "klsjdf", "sdfsd,fms", "slkdjfslkdjf",
+      "README.md", "project.ex", "notes.txt", "design.png", "slkdjfsld.fsdf", "klsjdf", "sdfsd,fms", "slkdjfslkdjf",
+    ] 
   end
 
   def list_all_files do
