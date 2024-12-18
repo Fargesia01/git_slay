@@ -7,6 +7,15 @@ defmodule ClientWeb.PageController do
     render(conn, :home, local_files: local_files, all_files: all_files)
   end
 
+  def commit(conn, %{"file" => file}) do
+    case Client.Backend.commit(file) do
+      :ok -> 
+        json(conn, %{status: "ok", message: "File committed successfully"})
+      {:error, reason} -> 
+        json(conn, %{status: "error", message: "Failed to commit file", reason: reason})
+    end
+  end
+
   def shutdown(_conn, _params) do
     IO.puts("Shutdown asked. Stopping the app...")
     unregister_client()
