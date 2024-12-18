@@ -11,15 +11,9 @@ defmodule Client.Backend do
     ["READMsadfE.md", "project.ex", "notes.txt", "design.png"] 
   end
 
-  def commit(path \\ @filesPath <> "commit/", file) do
+  def commit(file) do
     remote_files = Application.get_env(:client, :remote_files)
-
-    rm_v =
-      try do
-        Map.get!(remote_files, file)
-      rescue
-        _error -> 0
-      end
+    mr_v = Map.get(remote_files, file, 0)
 
     data =
       try do
@@ -28,7 +22,7 @@ defmodule Client.Backend do
         File.Error -> ""
       end
 
-    File.write!(path <> "#{file}#{@splitChars}#{ver}", data)
+    File.write(@filesPath <> "commit/#{file}#{@splitChars}#{mr_v}", data)
   end
 
   def send_file_list_to_server(file_list) do
