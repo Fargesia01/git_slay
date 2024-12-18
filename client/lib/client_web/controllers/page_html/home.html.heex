@@ -5,9 +5,16 @@
         Local Files:
       </h2>
 
-      <ul class="mt-4 list-disc pl-6 grid grid-cols-4 gap-4 max-h-[calc(8*theme('spacing.12'))] overflow-y-auto">
+      <ul class="mt-4 pl-6 grid grid-cols-4 gap-4 max-h-[calc(8*theme('spacing.12'))] overflow-y-auto">
         <%= for file <- @local_files do %>
-          <li class="text-lg text-gray-700 overflow-hidden whitespace-nowrap text-ellipsis"><%= file %></li>
+          <li>
+            <button
+              class="file-btn text-lg text-gray-700 rounded-md w-full block overflow-hidden whitespace-nowrap text-ellipsis text-left px-2 py-1 hover:bg-orange-300 hover:bg-opacity-50"
+              data-file-name={file}
+            >
+              <%= file %>
+            </button>
+          </li>
         <% end %>
       </ul>
     </div>
@@ -17,24 +24,31 @@
         Remote Files:
       </h2>
 
-      <ul class="mt-4 list-disc pl-6 grid grid-cols-4 gap-4 max-h-[calc(8*theme('spacing.12'))] overflow-y-auto">
+      <ul class="mt-4 pl-6 grid grid-cols-4 gap-4 max-h-[calc(8*theme('spacing.12'))] overflow-y-auto">
         <%= for file <- @all_files do %>
-          <li class="text-lg text-gray-700 overflow-hidden whitespace-nowrap text-ellipsis"><%= file %></li>
+          <li> 
+            <button
+              data-file-name={file}
+              class="file-btn text-lg text-gray-700 rounded-md w-full block overflow-hidden whitespace-nowrap text-ellipsis text-left px-2 py-1 hover:bg-orange-300 hover:bg-opacity-50"
+            >
+              <%= file %>
+            </button>
+          </li>
         <% end %>
       </ul>
     </div>
   </section>
 
   <footer class="flex justify-evenly p-6">
-    <button type="button" class="focus:outline-none text-white bg-orange-400 hover:bg-orange-500 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900">
+    <button type="button" id="pull-recent" class="focus:outline-none text-white bg-orange-500 hover:bg-orange-400 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900">
       Pull most recent version
     </button>
 
-    <button type="button" class="focus:outline-none text-white bg-orange-400 hover:bg-orange-500 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900">
+    <button type="button" id="pull-specific" class="focus:outline-none text-white bg-orange-500 hover:bg-orange-400 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900">
       Pull specific version
     </button>
 
-    <button type="button" class="focus:outline-none text-white bg-orange-400 hover:bg-orange-500 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900">
+    <button type="button" id="commit" class="focus:outline-none text-white bg-orange-500 hover:bg-orange-400 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900">
       Commit this file
     </button>
 
@@ -45,6 +59,18 @@
 </main>
 
 <script>
+  let selectedFile = null;
+  const fileButtons = document.querySelectorAll('.file-btn');
+
+  fileButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      fileButtons.forEach(btn => btn.classList.remove('bg-orange-400', 'bg-opacity-50'));
+      button.classList.add('bg-orange-400', 'bg-opacity-50');
+      selectedFile = button.getAttribute('data-file-name');
+      console.log('Selected file:', selectedFile);
+    });
+  });
+
   document.getElementById('shutdown').addEventListener('click', function() {
     fetch('/api/shutdown', {
       method: 'POST',
