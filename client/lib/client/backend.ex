@@ -11,6 +11,26 @@ defmodule Client.Backend do
     ["READMsadfE.md", "project.ex", "notes.txt", "design.png"] 
   end
 
+  def commit(path \\ @filesPath <> "commit/", file) do
+    remote_files = Application.get_env(:client, :remote_files)
+
+    rm_v =
+      try do
+        Map.get!(remote_files, file)
+      rescue
+        _error -> 0
+      end
+
+    data =
+      try do
+        File.read!(@filesPath <> "user/#{file}")
+      rescue
+        File.Error -> ""
+      end
+
+    File.write!(path <> "#{file}#{@splitChars}#{ver}", data)
+  end
+
   def send_file_list_to_server(file_list) do
     url = "http://192.168.1.11:5000/api/send-file-list"
     body = Jason.encode!(%{
