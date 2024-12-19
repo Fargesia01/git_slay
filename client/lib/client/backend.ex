@@ -43,7 +43,7 @@ defmodule Client.Backend do
       Application.put_env(
         :client,
         :remote_files,
-        Map.put(remote_files, file, Map.get(remote_files, file) + 1)
+        Map.put(remote_files, file, mr_v)
       )
     else
       Application.put_env(:client, :remote_files, Map.put_new(remote_files, file, 0))
