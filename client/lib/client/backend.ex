@@ -21,13 +21,16 @@ defmodule Client.Backend do
         do: String.split(f, "/", parts: :infinity) |> List.last()
   end
 
-  def list_remote_files do
-    def list_remote_files() do
+  def list_remote_files() do
     for f <- Path.wildcard(@filesPath <> "commit/*"), File.regular?(f), into: %{} do
-      mr_ver = Enum.max(Map.get(@record, List.last(String.split(f, "/", parts: :infinity))))
-      {f, mr_ver}
+      f_name =
+        String.split(List.last(String.split(f, "/", parts: :infinity)), @splitChars, parts: 2)
+        |> hd()
+
+      mr_ver = Enum.max(Map.get(@record, f_name))
+
+      {f_name, mr_ver}
     end
-  end
   end
 
   def commit(file) do
