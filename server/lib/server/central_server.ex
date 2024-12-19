@@ -81,10 +81,9 @@ defmodule Server.CentralServer do
   def handle_call({:receive_file_list, client_id, file_list}, _from, state) do
     IO.puts("Received file list from #{client_id}: #{inspect(file_list)}")
 
-    IO.inspect(state.current_request)
     new_state = Map.update(state, :request_results, %{}, fn request_results -> 
-      Map.update(request_results, client_id, [file_list], fn existing_files -> 
-        [file_list | existing_files]
+      Map.update(request_results, client_id, file_list, fn existing_files -> 
+        Map.merge(existing_files, file_list)
       end)
     end)
 
@@ -112,8 +111,9 @@ defmodule Server.CentralServer do
   defp aggregate_file_results(results) do
     results
     |> Map.values()
-    |> List.flatten()
-    |> Enum.uniq()
+    |> Enum.reduce(%{}, fn client_files, acc -> 
+       Map.merge(acc, client_files, fn _key, v1, v2 -> max(v1, v2) end)
+    end)
   end
 
   defp send_response_to_requester(requester_ip, aggregated_files_list) do
@@ -122,6 +122,12 @@ defmodule Server.CentralServer do
     body = Jason.encode!(%{files: aggregated_files_list})
 
     IO.puts("Sending aggregated file list to requester")
-    HTTPoison.post(url, body, [{"Content-Type", "application/json"}])
+    
+    case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
+      {:ok, %HTTPoison.Response{status_code: 200}} -> 
+        IO.puts("Successfully sent file list to #{requester_ip}")
+      {:error, %HTTPoison.Error{reason: reason}} -> 
+        IO.puts("Failed to send file list to #{requester_ip}. Reason: #{inspect(reason)}")
+    end
   end
 end

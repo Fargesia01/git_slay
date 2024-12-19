@@ -14,6 +14,8 @@ defmodule Server.Router do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
     %{"client_id" => client_id, "file_list" => file_list} = Jason.decode!(body)
 
+    IO.puts("Received file list from client #{client_id}: #{inspect(file_list)}")
+
     Server.CentralServer.receive_file_list(client_id, file_list)
     send_resp(conn, 200, Jason.encode!(%{status: "ok", message: "File list received"}))
   end

@@ -34,44 +34,57 @@ defmodule Client.Backend do
   end
 
   def list_all_files do
-    %{
-      "README.md" => 7,
-      "project.ex" => 9,
-      "notes.txt" => 4,
-      "design.png" => 10,
-      "main.py" => 3,
-      "index.html" => 6,
-      "style.css" => 2,
-      "app.js" => 8,
-      "database.sql" => 1,
-      "server.rb" => 5,
-      "client.go" => 2,
-      "utils.java" => 9,
-      "long_filename_with_extra_characters_just_to_see_how_it_fits.txt" => 11,
-      "another_really_long_filename_to_test_text_wrapping_issues.md" => 15,
-      "config.yaml" => 3,
-      "environment.env" => 4,
-      "package.json" => 7,
-      "webpack.config.js" => 5,
-      "Dockerfile" => 1,
-      "Makefile" => 3,
-      "LICENSE" => 2,
-      "CONTRIBUTING.md" => 8,
-      "AUTHORS" => 6,
-      "Changelog.txt" => 5,
-      "data.csv" => 9,
-      "analytics_report_2024.xlsx" => 10,
-      "test_suite.exs" => 7,
-      "module_diagram.pptx" => 12,
-      "architecture_overview.pdf" => 14,
-      "release_notes_v1.2.3.pdf" => 8,
-      "sample_data.json" => 3
-    }
+    url = "http://192.168.1.11:5000/api/request-file-list"
+    client_id = Application.get_env(:client, :client_id) || "unknown_client"
+
+    body = Jason.encode!(%{client_id: client_id})
+
+    headers = [{"Content-Type", "application/json"}]
+
+    case HTTPoison.post(url, body, headers) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} -> 
+        IO.puts("Successfully requested file list from server: #{response_body}")
+      {:error, %HTTPoison.Error{reason: reason}} -> 
+        IO.puts("Failed to request file list from server: #{inspect(reason)}")
+    end
+
+     %{
+    "README.md" => 7,
+    "project.ex" => 9,
+    "notes.txt" => 4,
+    "design.png" => 10,
+    "main.py" => 3,
+    "index.html" => 6,
+    "style.css" => 2,
+    "app.js" => 8,
+    "database.sql" => 1,
+    "server.rb" => 5,
+    "client.go" => 2,
+    "utils.java" => 9,
+    "long_filename_with_extra_characters_just_to_see_how_it_fits.txt" => 11,
+    "another_really_long_filename_to_test_text_wrapping_issues.md" => 15,
+    "config.yaml" => 3,
+    "environment.env" => 4,
+    "package.json" => 7,
+    "webpack.config.js" => 5,
+    "Dockerfile" => 1,
+    "Makefile" => 3,
+    "LICENSE" => 2,
+    "CONTRIBUTING.md" => 8,
+    "AUTHORS" => 6,
+    "Changelog.txt" => 5,
+    "data.csv" => 9,
+    "analytics_report_2024.xlsx" => 10,
+    "test_suite.exs" => 7,
+    "module_diagram.pptx" => 12,
+    "architecture_overview.pdf" => 14,
+    "release_notes_v1.2.3.pdf" => 8,
+    "sample_data.json" => 3
+  }
+
   end
 
   def commit(file) do
-    map = %{"project.ex" => 5}
-    Application.put_env(:client, :remote_files, map)
     remote_files = Application.get_env(:client, :remote_files)
     mr_v = Map.get(remote_files, file, -1) + 1
 
@@ -100,6 +113,8 @@ defmodule Client.Backend do
       "client_id" => Application.get_env(:client, :client_id),
       "file_list" => file_list
     })
+
+    IO.puts("Sending file list to server: #{inspect(file_list)}")
 
     HTTPoison.post(url, body, [{"Content-Type", "application/json"}])
   end
