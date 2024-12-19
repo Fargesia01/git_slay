@@ -9,7 +9,7 @@
         <%= for file <- @local_files do %>
           <li>
             <button
-              class="file-btn text-lg text-gray-700 rounded-md w-full block overflow-hidden whitespace-nowrap text-ellipsis text-left px-2 py-1 hover:bg-orange-300 hover:bg-opacity-50"
+              class="file-btn local-file text-lg text-gray-700 rounded-md w-full block overflow-hidden whitespace-nowrap text-ellipsis text-left px-2 py-1 hover:bg-orange-300 hover:bg-opacity-50"
               data-file-name={file}
             >
               <%= file %>
@@ -29,7 +29,7 @@
           <li> 
             <button
               data-file-name={file}
-              class="file-btn text-lg text-gray-700 rounded-md w-full block overflow-hidden whitespace-nowrap text-ellipsis text-left px-2 py-1 hover:bg-orange-300 hover:bg-opacity-50 flex items-center justify-between"
+              class="file-btn remote-file text-lg text-gray-700 rounded-md w-full block overflow-hidden whitespace-nowrap text-ellipsis text-left px-2 py-1 hover:bg-orange-300 hover:bg-opacity-50 flex items-center justify-between"
             >
               <span class="overflow-hidden text-ellipsis whitespace-nowrap"><%= file %></span>
               <span class="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-2">v<%= version %></span>
@@ -41,15 +41,15 @@
   </section>
 
   <footer class="flex justify-evenly p-6">
-    <button type="button" id="pull-recent" class="focus:outline-none text-white bg-orange-500 hover:bg-orange-400 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900">
+    <button type="button" id="pull-recent" disabled class="focus:outline-none text-white bg-orange-500 hover:bg-orange-400 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900 disabled:opacity-50">
       Pull most recent version
     </button>
 
-    <button type="button" id="pull-specific" class="focus:outline-none text-white bg-orange-500 hover:bg-orange-400 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900">
+    <button type="button" id="pull-specific" disabled class="focus:outline-none text-white bg-orange-500 hover:bg-orange-400 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900 disabled:opacity-50">
       Pull specific version
     </button>
 
-    <button type="button" id="commit" class="focus:outline-none text-white bg-orange-500 hover:bg-orange-400 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900">
+    <button type="button" id="commit" disabled class="focus:outline-none text-white bg-orange-500 hover:bg-orange-400 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:focus:ring-orange-900 disabled:opacity-50">
       Commit this file
     </button>
 
@@ -64,6 +64,9 @@
   // File selection logic
   let selectedFile = null;
   const fileButtons = document.querySelectorAll('.file-btn');
+  const commitButton = document.getElementById('commit');
+  const pullRecentButton = document.getElementById('pull-recent');
+  const pullSpecificButton = document.getElementById('pull-specific');
 
   fileButtons.forEach(button => {
     button.addEventListener('click', function() {
@@ -71,6 +74,14 @@
       button.classList.add('bg-orange-400', 'bg-opacity-50');
       selectedFile = button.getAttribute('data-file-name');
       console.log('Selected file:', selectedFile);
+
+      const isLocalFile = button.classList.contains('local-file');
+      const isRemoteFile = button.classList.contains('remote-file');
+
+      // Enable/Disable buttons accordingly
+      commitButton.disabled = isRemoteFile; // Cannot commit remote files
+      pullRecentButton.disabled = isLocalFile; // Cannot pull local files
+      pullSpecificButton.disabled = isLocalFile; // Cannot pull local files
     });
   });
 
@@ -151,7 +162,6 @@
       }
     })
     .catch(error => console.error('Error:', error));
-    IO.puts("TEST : #{remote_files} #{file}")
   });
 
   // Shutdown button
@@ -171,3 +181,116 @@
     .catch(error => console.error('Error:', error));
   });
 </script>
+
+//<script>
+//
+//  // File selection logic
+//  let selectedFile = null;
+//  const fileButtons = document.querySelectorAll('.file-btn');
+//
+//  fileButtons.forEach(button => {
+//    button.addEventListener('click', function() {
+//      fileButtons.forEach(btn => btn.classList.remove('bg-orange-400', 'bg-opacity-50'));
+//      button.classList.add('bg-orange-400', 'bg-opacity-50');
+//      selectedFile = button.getAttribute('data-file-name');
+//      console.log('Selected file:', selectedFile);
+//    });
+//  });
+//
+//  // Recent pull button
+//
+//  document.getElementById('pull-recent').addEventListener('click', function() {
+//    if (!selectedFile) {
+//      alert('Please select a file to pull.');
+//      return;
+//    }
+//
+//    fetch('/api/pull-recent', {
+//      method: 'POST',
+//      headers: { 'Content-Type': 'application/json' },
+//      body: JSON.stringify({ file: selectedFile })
+//    })
+//    .then(response => response.json())
+//    .then(data => {
+//      if (data.status === "ok") {
+//        alert('Most recent version pulled successfully.');
+//      } else {
+//        alert('Failed to pull the file.');
+//      }
+//    })
+//    .catch(error => console.error('Error:', error));
+//  });
+//
+//  // Specific pull
+//
+//  document.getElementById('pull-specific').addEventListener('click', function() {
+//    if (!selectedFile) {
+//      alert('Please select a file to pull.');
+//      return;
+//    }
+//
+//    const version = prompt('Enter the version to pull:');
+//    if (!version) {
+//      alert('No version provided.');
+//      return;
+//    }
+//
+//    fetch('/api/pull-specific', {
+//      method: 'POST',
+//      headers: { 'Content-Type': 'application/json' },
+//      body: JSON.stringify({ file: selectedFile, version: version })
+//    })
+//    .then(response => response.json())
+//    .then(data => {
+//      if (data.status === "ok") {
+//        alert('Specific version pulled successfully.');
+//      } else {
+//        alert('Failed to pull the file.');
+//      }
+//    })
+//    .catch(error => console.error('Error:', error));
+//  });
+//
+//  // Commit button
+//
+//  document.getElementById('commit').addEventListener('click', function() {
+//    if (!selectedFile) {
+//      alert('Please select a file to commit.');
+//      return;
+//    }
+//
+//    fetch('/api/commit', {
+//      method: 'POST',
+//      headers: { 'Content-Type': 'application/json' },
+//      body: JSON.stringify({ file: selectedFile })
+//    })
+//    .then(response => {
+//      if (response.ok) {
+//        alert('File successfully committed.');
+//        console.log('File successfully committed.');
+//      } else {
+//        alert('Failed to commit the file.');
+//        console.error('Failed to commit the file.');
+//      }
+//    })
+//    .catch(error => console.error('Error:', error));
+//    IO.puts("TEST : #{remote_files} #{file}")
+//  });
+//
+//  // Shutdown button
+//
+//  document.getElementById('shutdown').addEventListener('click', function() {
+//    fetch('/api/shutdown', {
+//      method: 'POST',
+//      headers: { 'Content-Type': 'application/json' }
+//    })
+//    .then(response => {
+//      if (response.ok) {
+//        console.log('Shutdown started');
+//      } else {
+//        console.error('Failed to shutdown the app');
+//      }
+//    })
+//    .catch(error => console.error('Error:', error));
+//  });
+//</script>
