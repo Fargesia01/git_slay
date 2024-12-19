@@ -73,6 +73,7 @@ defmodule ClientWeb.PageController do
   def receive_file(conn, %{"file" => file, "version" => version, "file_data" => file_data}) do
     IO.puts("Received file '#{file}' version #{version} from server.")
     IO.inspect(file_data)
+    Client.Backend.put_in_local(file, version, file_data)
     json(conn, %{status: "ok"})
   end
 
