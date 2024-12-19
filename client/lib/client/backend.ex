@@ -25,8 +25,7 @@ defmodule Client.Backend do
   end
 
   def list_remote_files do
-    for {file, versions} <- Application.get_env(:client, :record),, into: %{} do
-      IO.inspect(Enum.max(versions))
+    for {file, versions} <- @record, into: %{} do
       {file, Enum.max(versions)}
     end
   end
@@ -36,7 +35,7 @@ defmodule Client.Backend do
   """
   def get_versions(file) do
     try do
-      Map.fetch!(Application.get_env(:client, :record),, file)
+      Map.fetch!(Application.get_env(:client, :record), file)
     rescue
       KeyError -> nil
     end

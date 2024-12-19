@@ -98,92 +98,48 @@ defmodule Server.CentralServer do
     {:reply, :ok, state}
   end
 
+    # Will ask all clients for their list of commits, wait for each (timeout 5s) then put all data togther
+    # and finally send back data to asking client
   @impl true
-def handle_call({:request_file_list}, {from_pid, _}, state) do
-  IO.puts("Broadcasting 'list_local_files' request to all clients...")
+  def handle_call({:request_file_list}, _from, state) do
+    IO.puts("Broadcasting 'list_local_files' request to all client...")
 
-  responses = 
-    state.clients
-    |> Enum.map(fn {_client_id, %{ip: ip}} -> 
-      url = "http://#{ip}:4000/api/list-local-files"
-      Task.async(fn -> 
-        case HTTPoison.post(url, "", [{"Content-Type", "application/json"}]) do
-          {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} -> 
-            {:ok, Jason.decode!(response_body)["files"]}
-          {:error, %HTTPoison.Error{reason: reason}} -> 
-            {:error, reason}
+    responses = 
+      state.clients
+      |> Enum.map(fn {_client_id, %{ip: ip}} -> 
+        url = "http://#{ip}:4000/api/list-local-files"
+        Task.async(fn -> 
+          case HTTPoison.post(url, "", [{"Content-Type", "application/json"}]) do
+            {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} -> 
+              {:ok, Jason.decode!(response_body)["files"]}
+            {:error, %HTTPoison.Error{reason: reason}} -> 
+              {:error, reason}
+          end
+        end)
+      end)
+
+      |> Enum.map(fn task -> 
+        case Task.yield(task, 5000) do
+          {:ok, result} -> result
+          nil -> 
+            Task.shutdown(task, :brutal_kill)
+            {:error, :timeout}
         end
       end)
-    end)
 
-  responses_with_timeouts = 
-    responses
-    |> Enum.map(fn task -> 
-      case Task.yield(task, 5000) do
-        {:ok, result} -> {:ok, result}
-        nil -> 
-          Task.shutdown(task, :brutal_kill)
-          {:error, :timeout}
-      end
-    end)
+    aggregated_files = 
+      responses 
+      |> Enum.filter(fn 
+        {:ok, _files} -> true
+        _ -> false 
+      end)
+      |> Enum.map(fn {:ok, files} -> files end)
+      |> Enum.reduce(%{}, fn file_map, acc -> Map.merge(acc, file_map) end)
 
-  aggregated_files = 
-    responses_with_timeouts
-    |> Enum.filter(fn 
-      {:ok, {:ok, _files}} -> true
-      _ -> false 
-    end)
-    |> Enum.map(fn {:ok, {:ok, files}} -> files end)
-    |> Enum.reduce(%{}, fn file_map, acc -> Map.merge(acc, file_map) end)
+    IO.puts("Aggregated file list: #{inspect(aggregated_files)}")
 
-  # Send response to the requesting client with files we got so far
-  IO.puts("Aggregated file list (partial): #{inspect(aggregated_files)}")
-
-  {:reply, aggregated_files, state}
-end
-
-  # Will ask all clients for their list of commits, wait for each (timeout 5s) then put all data togther
-  # and finally send back data to asking client
-  #@impl true
-  #def handle_call({:request_file_list}, _from, state) do
-  #  IO.puts("Broadcasting 'list_local_files' request to all client...")
-
-  #  responses = 
-  #    state.clients
-  #    |> Enum.map(fn {_client_id, %{ip: ip}} -> 
-  #      url = "http://#{ip}:4000/api/list-local-files"
-  #      Task.async(fn -> 
-  #        case HTTPoison.post(url, "", [{"Content-Type", "application/json"}]) do
-  #          {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} -> 
-  #            {:ok, Jason.decode!(response_body)["files"]}
-  #          {:error, %HTTPoison.Error{reason: reason}} -> 
-  #            {:error, reason}
-  #        end
-  #      end)
-  #    end)
-
-  #    |> Enum.map(fn task -> 
-  #      case Task.yield(task, 5000) do
-  #        {:ok, result} -> result
-  #        nil -> 
-  #          Task.shutdown(task, :brutal_kill)
-  #          {:error, :timeout}
-  #      end
-  #    end)
-
-  #  aggregated_files = 
-  #    responses 
-  #    |> Enum.filter(fn 
-  #      {:ok, _files} -> true
-  #      _ -> false 
-  #    end)
-  #    |> Enum.map(fn {:ok, files} -> files end)
-  #    |> Enum.reduce(%{}, fn file_map, acc -> Map.merge(acc, file_map) end)
-
-  #  IO.puts("Aggregated file list: #{inspect(aggregated_files)}")
-
-  #  {:reply, aggregated_files, state}
-  #end
+    {:reply, aggregated_files, state}
+  end
 
   @impl true
   def handle_call(:list_clients, _from, state) do
