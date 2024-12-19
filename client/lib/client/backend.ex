@@ -15,6 +15,9 @@ defmodule Client.Backend do
             Map.update(acc, fileName, [version], fn versions -> [version | versions] end)
           end)
 
+  Application.put_env(:client, :record, @record)
+
+
   def list_local_files() do
     for f <- Path.wildcard(@filesPath <> "user/*"),
         File.regular?(f),
@@ -22,7 +25,7 @@ defmodule Client.Backend do
   end
 
   def list_remote_files do
-    for {file, versions} <- @record, into: %{} do
+    for {file, versions} <- Application.get_env(:client, :record),, into: %{} do
       IO.inspect(Enum.max(versions))
       {file, Enum.max(versions)}
     end
@@ -33,7 +36,7 @@ defmodule Client.Backend do
   """
   def get_versions(file) do
     try do
-      Map.fetch!(@record, file)
+      Map.fetch!(Application.get_env(:client, :record),, file)
     rescue
       KeyError -> nil
     end
@@ -53,6 +56,29 @@ defmodule Client.Backend do
   def put_in_local(file, ver, data) do
     File.write(@filesPath <> "commit/#{file}#{@splitChars}#{ver}", data)
     File.cp(@filesPath <> "commit/#{file}#{@splitChars}#{ver}", @filesPath <> "user/#{file}")
+
+    record = Application.get_env(:client, :record)
+    remote_files = Application.get_env(:client, :remote_files)
+
+    Application.put_env(
+      :client,
+      :record,
+      Map.update(record, file, ver, fn versions ->
+        if !Enum.any?(record, fn e -> e == ver end) do
+          [ver | versions]
+        end
+      end)
+    )
+
+    Application.put_env(
+      :client,
+      :remote_files,
+      Map.update(remote_files, file, ver, fn version ->
+        if String.to_integer(version) < String.to_integer(ver) do
+          ver
+        end
+      end)
+    )
   end
 
   def list_all_files do
@@ -81,6 +107,7 @@ defmodule Client.Backend do
 
   def commit(file) do
     remote_files = Application.get_env(:client, :remote_files)
+    record = Application.get_env(:client, :file)
 
     mr_v = String.to_integer(Map.get(remote_files, file, "-1")) + 1
 
@@ -94,8 +121,10 @@ defmodule Client.Backend do
     File.write(@filesPath <> "commit/#{file}#{@splitChars}#{mr_v}", data)
 
     remote_files = Map.put(remote_files, file, mr_v)
+    record = Map.put(record, file, [mr_v | Map.get(record, file)])
 
     Application.put_env(:client, :remote_files, remote_files)
+    Application.put_env(:client, :record, record)
   end
 
   def send_file_list_to_server(file_list) do
