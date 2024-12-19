@@ -23,6 +23,7 @@ defmodule Client.Backend do
 
   def list_remote_files do
     for {file, versions} <- @record, into: %{} do
+      IO.inspect(Enum.max(versions))
       {file, Enum.max(versions)}
     end
   end
@@ -55,7 +56,8 @@ defmodule Client.Backend do
   end
 
   def list_all_files do
-    url = "http://192.168.1.11:5000/api/request-file-list"
+    ip = Application.get_env(:client, :server_ip)
+    url = "http://#{ip}:5000/api/request-file-list"
     body = ""
 
     headers = [{"Content-Type", "application/json"}]
@@ -97,7 +99,8 @@ defmodule Client.Backend do
   end
 
   def send_file_list_to_server(file_list) do
-    url = "http://192.168.1.11:5000/api/send-file-list"
+    ip = Application.get_env(:client, :server_ip)
+    url = "http://#{ip}:5000/api/send-file-list"
     body = Jason.encode!(%{
       "client_id" => Application.get_env(:client, :client_id),
       "file_list" => file_list

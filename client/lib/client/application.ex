@@ -27,14 +27,10 @@ defmodule Client.Application do
 
   # Automatically registers the client on startup
   defp register_client do 
-    map = %{"project.ex" => 5}
-    Application.put_env(:client, :remote_files, map)
-    ip  = "127.0.0.1"
-    url = "http://192.168.1.11:5000/api/register"
-
-    body = Jason.encode!(%{
-      "ip" => ip
-    })
+    ip = "192.168.1.11"
+    Application.put_env(:client, :server_ip, ip)
+    url = "http://#{ip}:5000/api/register"
+    body = ""
 
     case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} -> 
