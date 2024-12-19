@@ -86,7 +86,7 @@ defmodule Client.Backend do
 
   def commit(file) do
     remote_files = Application.get_env(:client, :remote_files)
-    mr_v = Map.get(remote_files, file, -1) + 1
+    mr_v = String.to_integer(Map.get(remote_files, file, "-1")) + 1
 
     data =
       try do
