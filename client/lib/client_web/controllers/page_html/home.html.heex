@@ -87,7 +87,7 @@
       body: JSON.stringify({ file: selectedFile })
     })
     .then(response => {
-      if (reponse.ok) {
+      if (response.ok) {
         alert('File successfully committed.');
         console.log('File successfully committed.');
       } else {
@@ -96,6 +96,7 @@
       }
     })
     .catch(error => console.error('Error:', error));
+    IO.puts("TEST : #{remote_files} #{file}")
   });
 
   // Shutdown button

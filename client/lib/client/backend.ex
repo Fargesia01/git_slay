@@ -34,6 +34,8 @@ defmodule Client.Backend do
   end
 
   def commit(file) do
+    map = %{"project.ex" => 5}
+    Application.put_env(:client, :remote_files, map)
     remote_files = Application.get_env(:client, :remote_files)
     mr_v = Map.get(remote_files, file, -1) + 1
 
