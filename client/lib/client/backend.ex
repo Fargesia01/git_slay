@@ -33,6 +33,28 @@ defmodule Client.Backend do
     end
   end
 
+  @doc """
+  Returns all the versions of the given file that are saved locally.
+  """
+  def get_versions(file) do
+    try do
+      Map.fetch!(@record, file)
+    rescue
+      KeyError -> nil
+    end
+  end
+
+  @doc """
+  Returns the data of the given file and version.
+  """
+  def get_file(file, ver) do
+    try do
+      File.read!(@filesPath <> "commit/#{file}#{@splitChars}#{ver}")
+    rescue
+      File.Error -> nil
+    end
+  end
+
   def list_all_files do
     url = "http://192.168.1.11:5000/api/request-file-list"
     client_id = Application.get_env(:client, :client_id) || "unknown_client"
