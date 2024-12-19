@@ -25,13 +25,14 @@
       </h2>
 
       <ul class="mt-4 pl-6 grid grid-cols-4 gap-4 max-h-[calc(8*theme('spacing.12'))] overflow-y-auto">
-        <%= for file <- @all_files do %>
+        <%= for {file, version} <- @all_files do %>
           <li> 
             <button
               data-file-name={file}
-              class="file-btn text-lg text-gray-700 rounded-md w-full block overflow-hidden whitespace-nowrap text-ellipsis text-left px-2 py-1 hover:bg-orange-300 hover:bg-opacity-50"
+              class="file-btn text-lg text-gray-700 rounded-md w-full block overflow-hidden whitespace-nowrap text-ellipsis text-left px-2 py-1 hover:bg-orange-300 hover:bg-opacity-50 flex items-center justify-between"
             >
-              <%= file %>
+              <span class="overflow-hidden text-ellipsis whitespace-nowrap"><%= file %></span>
+              <span class="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-2">v<%= version %></span>
             </button>
           </li>
         <% end %>
