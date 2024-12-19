@@ -23,7 +23,7 @@ defmodule ClientWeb.PageController do
   end
 
   def list_local_files(conn, _params) do
-    file_list = Application.get_env(:client, :remote_files) || %{}
+    file_list = Client.Backend.list_remote_files()
     IO.puts("Client sending file list: #{inspect(file_list)}")
 
     Client.Backend.send_file_list_to_server(file_list)

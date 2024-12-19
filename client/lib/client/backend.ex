@@ -21,7 +21,7 @@ defmodule Client.Backend do
         do: String.split(f, "/", parts: :infinity) |> List.last()
   end
 
-  def list_remote_files() do
+  def list_remote_files do
     for f <- Path.wildcard(@filesPath <> "commit/*"), File.regular?(f), into: %{} do
       f_name =
         String.split(List.last(String.split(f, "/", parts: :infinity)), @splitChars, parts: 2)
