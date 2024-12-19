@@ -33,6 +33,16 @@ defmodule Client.Backend do
       end
 
     File.write(@filesPath <> "commit/#{file}#{@splitChars}#{mr_v}", data)
+
+    if Map.has_key?(file) do
+      Application.put_env(
+        :client,
+        :remote_files,
+        Map.put(remote_files, file, Map.get(remote_files, file) + 1)
+      )
+    else
+      Application.put_env(:client, :remote_files, Map.put_new(remote_files, file, 0))
+    end
   end
 
   def send_file_list_to_server(file_list) do
