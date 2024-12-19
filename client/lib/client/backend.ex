@@ -22,7 +22,7 @@ defmodule Client.Backend do
   end
 
   def list_remote_files do
-    for {file, versions} <- @record do
+    for {file, versions} <- @record, into: %{} do
       %{file => Enum.max(versions)}
     end
   end
