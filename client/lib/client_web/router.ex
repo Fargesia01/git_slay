@@ -27,6 +27,10 @@ defmodule ClientWeb.Router do
     post "/list-local-files", PageController, :list_local_files
     post "/commit", PageController, :commit
     get "/files/stream", PageController, :stream_files
+    post "/get-file", PageController, :get_file
+    post "/receive-file", PageController, :receive_file
+    post "/pull-recent", PageController, :pull_recent
+    post "/pull-specific", PageController, :pull_specific
   end
 
   # Other scopes may use custom stacks.

@@ -27,6 +27,7 @@ defmodule Client.Backend do
         String.split(List.last(String.split(f, "/", parts: :infinity)), @splitChars, parts: 2)
         |> hd()
 
+      IO.inspect(Map.get(@record, f_name))
       mr_ver = Enum.max(Map.get(@record, f_name))
 
       {f_name, mr_ver}
@@ -62,9 +63,7 @@ defmodule Client.Backend do
 
   def list_all_files do
     url = "http://192.168.1.11:5000/api/request-file-list"
-    client_id = Application.get_env(:client, :client_id) || "unknown_client"
-
-    body = Jason.encode!(%{client_id: client_id})
+    body = ""
 
     headers = [{"Content-Type", "application/json"}]
 
@@ -73,6 +72,7 @@ defmodule Client.Backend do
         case Jason.decode(response_body) do
           {:ok, %{"files" => files}} -> 
             IO.puts("Successfully received file list from server: #{inspect(files)}")
+            Application.put_env(:client, :remote_files, files)
             files
           {:error, reason} -> 
             IO.puts("Failed to decode JSON response: #{inspect(reason)}")

@@ -74,6 +74,60 @@
     });
   });
 
+  // Recent pull button
+
+  document.getElementById('pull-recent').addEventListener('click', function() {
+    if (!selectedFile) {
+      alert('Please select a file to pull.');
+      return;
+    }
+
+    fetch('/api/pull-recent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: selectedFile })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === "ok") {
+        alert('Most recent version pulled successfully.');
+      } else {
+        alert('Failed to pull the file.');
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+
+  // Specific pull
+
+  document.getElementById('pull-specific').addEventListener('click', function() {
+    if (!selectedFile) {
+      alert('Please select a file to pull.');
+      return;
+    }
+
+    const version = prompt('Enter the version to pull:');
+    if (!version) {
+      alert('No version provided.');
+      return;
+    }
+
+    fetch('/api/pull-specific', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: selectedFile, version: version })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === "ok") {
+        alert('Specific version pulled successfully.');
+      } else {
+        alert('Failed to pull the file.');
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+
   // Commit button
 
   document.getElementById('commit').addEventListener('click', function() {

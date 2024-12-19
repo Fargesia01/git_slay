@@ -5,8 +5,7 @@ defmodule Server.Router do
   plug :dispatch
 
   post "/api/request-file-list" do
-    ip = Tuple.to_list(conn.remote_ip) |> Enum.join(".")
-    files = Server.CentralServer.request_file_list(ip)
+    files = Server.CentralServer.request_file_list()
     send_resp(conn, 200, Jason.encode!(%{
       status: "ok",
       message: "Broadcast sent to all clients",
@@ -19,6 +18,32 @@ defmodule Server.Router do
     %{"ip" => ip} = Jason.decode!(body)
     client_id = Server.CentralServer.register_client(ip)
     send_resp(conn, 200, Jason.encode!(%{status: "ok", client_id: client_id}))
+  end
+
+  post "/api/request-file" do
+    {:ok, body, _conn} = Plug.Conn.read_body(conn)
+    %{"file" => file, "version" => version} = Jason.decode!(body)
+    IO.puts("Request received for file: #{file} version: #{version}")
+    ip = "127.0.0.1"
+
+    files = Server.CentralServer.request_file(ip, file, version)
+    
+    send_resp(conn, 200, Jason.encode!(%{
+      status: "ok",
+      message: "Request sent to all clients for file version",
+      files: files
+    }))
+  end
+
+  post "/api/receive-file" do
+    {:ok, body, _conn} = Plug.Conn.read_body(conn)
+    %{"file" => file, "version" => version, "file_data" => file_data} = Jason.decode!(body)
+
+    IO.puts("Received file '#{file}' version #{version} from client. Data length: #{String.length(file_data)}")
+
+    Server.CentralServer.receive_file(file, version, file_data)
+
+    send_resp(conn, 200, Jason.encode!(%{status: "ok", message: "File received successfully"}))
   end
 
   post "/api/unregister" do
