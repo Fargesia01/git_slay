@@ -15,8 +15,6 @@ defmodule Client.Backend do
             Map.update(acc, fileName, [version], fn versions -> [version | versions] end)
           end)
 
-  Application.put_env(:client, :record, @record)
-
 
   def list_local_files() do
     for f <- Path.wildcard(@filesPath <> "user/*"),
@@ -25,8 +23,18 @@ defmodule Client.Backend do
   end
 
   def list_remote_files do
-    for {file, versions} <- Application.get_env(:client, :record),, into: %{} do
-      IO.inspect(Enum.max(versions))
+    record = Path.wildcard(@filesPath <> "commit/*")
+          |> Enum.filter(&File.regular?(&1))
+          |> Enum.reduce(%{}, fn f, acc ->
+            [fileName, version] =
+              String.split(List.last(String.split(f, "/", parts: :infinity)), @splitChars,
+                parts: 2
+              )
+
+            Map.update(acc, fileName, [version], fn versions -> [version | versions] end)
+          end)
+    Application.put_env(:client, :record, record)
+    for {file, versions} <- record, into: %{} do
       {file, Enum.max(versions)}
     end
   end
@@ -36,7 +44,7 @@ defmodule Client.Backend do
   """
   def get_versions(file) do
     try do
-      Map.fetch!(Application.get_env(:client, :record),, file)
+      Map.fetch!(Application.get_env(:client, :record), file)
     rescue
       KeyError -> nil
     end
