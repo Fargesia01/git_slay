@@ -25,7 +25,8 @@ defmodule ClientWeb.Router do
 
     post "/shutdown", PageController, :shutdown
     post "/list-local-files", PageController, :list_local_files
-    post "/file-list-response", PageController, :file_list_response
+    post "/commit", PageController, :commit
+    get "/files/stream", PageController, :stream_files
   end
 
   # Other scopes may use custom stacks.
