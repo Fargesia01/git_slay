@@ -98,8 +98,8 @@ defmodule Server.CentralServer do
     {:reply, :ok, state}
   end
 
-  # Will ask all clients for their list of commits, wait for each (timeout 5s) then put all data togther
-  # and finally send back data to asking client
+    # Will ask all clients for their list of commits, wait for each (timeout 5s) then put all data togther
+    # and finally send back data to asking client
   @impl true
   def handle_call({:request_file_list}, _from, state) do
     IO.puts("Broadcasting 'list_local_files' request to all client...")
