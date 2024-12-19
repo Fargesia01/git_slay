@@ -22,15 +22,8 @@ defmodule Client.Backend do
   end
 
   def list_remote_files do
-    for f <- Path.wildcard(@filesPath <> "commit/*"), File.regular?(f), into: %{} do
-      f_name =
-        String.split(List.last(String.split(f, "/", parts: :infinity)), @splitChars, parts: 2)
-        |> hd()
-
-      IO.inspect(Map.get(@record, f_name))
-      mr_ver = Enum.max(Map.get(@record, f_name))
-
-      {f_name, mr_ver}
+    for {file, versions} <- @record do
+      {file, Enum.max(versions)}
     end
   end
 
