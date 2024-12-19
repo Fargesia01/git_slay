@@ -30,10 +30,6 @@ defmodule Server.CentralServer do
     GenServer.call({:global, __MODULE__}, {:request_file_list, request_ip})
   end
 
-  def receive_file_list(client_id, file_list) do
-    GenServer.call({:global, __MODULE__}, {:receive_file_list, client_id, file_list})
-  end
-
   def list_clients do
     GenServer.call({:global, __MODULE__}, :list_clients)
   end
@@ -67,67 +63,45 @@ defmodule Server.CentralServer do
       state | request_results: %{}, current_request: request_ip
     }
 
-    Enum.each(state.clients, fn {_client_id, %{ip: ip}} -> 
-      url = "http://#{ip}:4000/api/list-local-files"
-      Task.start(fn -> 
-        HTTPoison.post(url, "", [{"Content-Type", "application/json"}])
+    responses = 
+      state.clients
+      |> Enum.map(fn {_client_id, %{ip: ip}} -> 
+        url = "http://#{ip}:4000/api/list-local-files"
+        Task.async(fn -> 
+          case HTTPoison.post(url, "", [{"Content-Type", "application/json"}]) do
+            {:ok, %HTTPoison.Response{status_code: 200, body: response_body}} -> 
+              {:ok, Jason.decode!(response_body)["files"]}
+            {:error, %HTTPoison.Error{reason: reason}} -> 
+              {:error, reason}
+          end
+        end)
       end)
-    end)
 
-    {:reply, :ok, new_state}
-  end
-
-  @impl true
-  def handle_call({:receive_file_list, client_id, file_list}, _from, state) do
-    IO.puts("Received file list from #{client_id}: #{inspect(file_list)}")
-
-    new_state = Map.update(state, :request_results, %{}, fn request_results -> 
-      Map.update(request_results, client_id, file_list, fn existing_files -> 
-        Map.merge(existing_files, file_list)
+      |> Enum.map(fn task -> 
+        case Task.yield(task, 5000) do
+          {:ok, result} -> result
+          nil -> 
+            Task.shutdown(task, :brutal_kill)
+            {:error, :timeout}
+        end
       end)
-    end)
 
-    if all_clients_responded?(state.clients, new_state.request_results) do
-      IO.puts("All clients have responded. Aggregating...")
+    aggregated_files = 
+      responses 
+      |> Enum.filter(fn 
+        {:ok, _files} -> true
+        _ -> false 
+      end)
+      |> Enum.map(fn {:ok, files} -> files end)
+      |> Enum.reduce(%{}, fn file_map, acc -> Map.merge(acc, file_map) end)
 
-      aggregated_files_list = aggregate_file_results(new_state.request_results)
-      send_response_to_requester(new_state.current_request, aggregated_files_list)
-    end
+    IO.puts("Aggregated file list: #{inspect(aggregated_files)}")
 
-    {:reply, :ok, new_state}
+    {:reply, aggregated_files, new_state}
   end
 
   @impl true
   def handle_call(:list_clients, _from, state) do
     {:reply, state, state}
-  end
-
-  # HELPER FUNCTIONS
-
-  defp all_clients_responded?(clients, request_results) do
-    Map.keys(clients) -- Map.keys(request_results) == []
-  end
-
-  defp aggregate_file_results(results) do
-    results
-    |> Map.values()
-    |> Enum.reduce(%{}, fn client_files, acc -> 
-       Map.merge(acc, client_files, fn _key, v1, v2 -> max(v1, v2) end)
-    end)
-  end
-
-  defp send_response_to_requester(requester_ip, aggregated_files_list) do
-    IO.puts(requester_ip)
-    url = "http://127.0.0.1:4000/api/file-list-response"
-    body = Jason.encode!(%{files: aggregated_files_list})
-
-    IO.puts("Sending aggregated file list to requester")
-    
-    case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
-      {:ok, %HTTPoison.Response{status_code: 200}} -> 
-        IO.puts("Successfully sent file list to #{requester_ip}")
-      {:error, %HTTPoison.Error{reason: reason}} -> 
-        IO.puts("Failed to send file list to #{requester_ip}. Reason: #{inspect(reason)}")
-    end
   end
 end

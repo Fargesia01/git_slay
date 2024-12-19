@@ -6,18 +6,12 @@ defmodule Server.Router do
 
   post "/api/request-file-list" do
     ip = Tuple.to_list(conn.remote_ip) |> Enum.join(".")
-    Server.CentralServer.request_file_list(ip)
-    send_resp(conn, 200, Jason.encode!(%{status: "ok", message: "Broadcast sent to all clients"}))
-  end
-
-  post "/api/send-file-list" do
-    {:ok, body, _conn} = Plug.Conn.read_body(conn)
-    %{"client_id" => client_id, "file_list" => file_list} = Jason.decode!(body)
-
-    IO.puts("Received file list from client #{client_id}: #{inspect(file_list)}")
-
-    Server.CentralServer.receive_file_list(client_id, file_list)
-    send_resp(conn, 200, Jason.encode!(%{status: "ok", message: "File list received"}))
+    files = Server.CentralServer.request_file_list(ip)
+    send_resp(conn, 200, Jason.encode!(%{
+      status: "ok",
+      message: "Broadcast sent to all clients",
+      files: files
+    }))
   end
 
   post "/api/register" do

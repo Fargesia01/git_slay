@@ -26,13 +26,7 @@ defmodule ClientWeb.PageController do
     file_list = Client.Backend.list_remote_files()
     IO.puts("Client sending file list: #{inspect(file_list)}")
 
-    Client.Backend.send_file_list_to_server(file_list)
     json(conn, %{status: "ok", files: file_list})
-  end
-
-  def file_list_response(conn, %{"files" => files}) do
-    IO.puts("Files accross network received: #{inspect(files)}")
-    json(conn, %{status: "ok"})
   end
 
   # Unregister the client when app shuts down
