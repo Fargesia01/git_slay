@@ -33,6 +33,28 @@ defmodule Client.Backend do
     end
   end
 
+  @doc """
+  Returns all the versions of the given file that are saved locally.
+  """
+  def get_versions(file) do
+    try do
+      Map.fetch!(@record, file)
+    rescue
+      KeyError -> nil
+    end
+  end
+
+  @doc """
+  Returns the data of the given file and version.
+  """
+  def get_file(file, ver) do
+    try do
+      File.read!(@filesPath <> "commit/#{file}#{@splitChars}#{ver}")
+    rescue
+      File.Error -> nil
+    end
+  end
+
   def commit(file) do
     remote_files = Application.get_env(:client, :remote_files)
     mr_v = Map.get(remote_files, file, -1) + 1
