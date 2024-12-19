@@ -7,14 +7,19 @@ defmodule Client.Backend do
   @record Path.wildcard(@filesPath <> "commit/*")
           |> Enum.filter(&File.regular?(&1))
           |> Enum.reduce(%{}, fn f, acc ->
-            [fileName, version] = Path.rootname(f) |> String.split(@splitChars, parts: 2)
+            [fileName, version] =
+              String.split(List.last(String.split(f, "/", parts: :infinity)), @splitChars,
+                parts: 2
+              )
 
             Map.update(acc, fileName, [version], fn versions -> [version | versions] end)
           end)
   @url "http://192.168.1.11:5000/api/"
 
   def list_local_files() do
-    for f <- Path.wildcard(@filesPath <> "user/*"), File.regular?(f), do: f
+    for f <- Path.wildcard(@filesPath <> "user/*"),
+        File.regular?(f),
+        do: String.split(f, "/", parts: :infinity) |> List.last()
   end
 
   def list_all_files do
@@ -34,7 +39,7 @@ defmodule Client.Backend do
 
     File.write(@filesPath <> "commit/#{file}#{@splitChars}#{mr_v}", data)
 
-    if Map.has_key?(file) do
+    if Map.has_key?(remote_files, file) do
       Application.put_env(
         :client,
         :remote_files,
