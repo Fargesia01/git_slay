@@ -14,7 +14,6 @@ defmodule Client.Backend do
 
             Map.update(acc, fileName, [version], fn versions -> [version | versions] end)
           end)
-  @url "http://192.168.1.11:5000/api/"
 
   def list_local_files() do
     for f <- Path.wildcard(@filesPath <> "user/*"),
@@ -25,7 +24,7 @@ defmodule Client.Backend do
   def list_remote_files do
     def list_remote_files() do
     for f <- Path.wildcard(@filesPath <> "commit/*"), File.regular?(f), into: %{} do
-      mr_ver = Enum.max(Map.get(@record, List.last(String.split(f, "/", parts: :infinity)))
+      mr_ver = Enum.max(Map.get(@record, List.last(String.split(f, "/", parts: :infinity))))
       {f, mr_ver}
     end
   end
