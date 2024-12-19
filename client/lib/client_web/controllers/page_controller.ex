@@ -22,6 +22,60 @@ defmodule ClientWeb.PageController do
     System.halt(0)
   end
 
+  def pull_recent(conn, %{"file" => file}) do
+    remote_files = Application.get_env(:client, :remote_files, %{})
+    version = Map.get(remote_files, file, 0)
+
+    url = "http://192.168.1.11:5000/api/request-file"
+    body = Jason.encode!(%{file: file, version: version})
+
+    case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
+      {:ok, %HTTPoison.Response{status_code: 200}} -> 
+        json(conn, %{status: "ok", message: "Request sent for most recent version."})
+      {:error, %HTTPoison.Error{reason: reason}} -> 
+        json(conn, %{status: "error", message: "Request failed.", reason: inspect(reason)})
+    end
+  end
+
+  def pull_specific(conn, %{"file" => file, "version" => version}) do
+    url = "http://192.168.1.11:5000/api/request-file"
+    body = Jason.encode!(%{file: file, version: version})
+
+    case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
+      {:ok, %HTTPoison.Response{status_code: 200}} -> 
+        json(conn, %{status: "ok", message: "Request sent for specific version."})
+      {:error, %HTTPoison.Error{reason: reason}} -> 
+        json(conn, %{status: "error", message: "Request failed.", reason: inspect(reason)})
+    end
+  end
+
+  def get_file(conn, %{"file" => file, "version" => version}) do
+    IO.puts("Received request for file '#{file}' version #{version}.")
+
+    file_data = Client.Backend.get_file(file, version)
+    
+    if file_data do
+      url = "http://192.168.1.11:5000/api/receive-file"
+      body = Jason.encode!(%{file: file, version: version, file_data: file_data})
+
+      case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
+        {:ok, %HTTPoison.Response{status_code: 200}} -> 
+          IO.puts("Successfully sent file '#{file}' version #{version} to the server.")
+        {:error, %HTTPoison.Error{reason: reason}} -> 
+          IO.puts("Failed to send file: Reason: #{inspect(reason)}")
+      end
+    else
+      IO.puts("File '#{file}' version #{version} not found.")
+    end
+    json(conn, %{status: "ok"})
+  end
+
+  def receive_file(conn, %{"file" => file, "version" => version, "file_data" => file_data}) do
+    IO.puts("Received file '#{file}' version #{version} from server.")
+    IO.inspect(file_data)
+    json(conn, %{status: "ok"})
+  end
+
   def list_local_files(conn, _params) do
     file_list = Client.Backend.list_remote_files()
     IO.puts("Client sending file list: #{inspect(file_list)}")

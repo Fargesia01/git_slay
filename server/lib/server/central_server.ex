@@ -26,8 +26,16 @@ defmodule Server.CentralServer do
     GenServer.call({:global, __MODULE__}, {:unregister_client, client_id})
   end
 
-  def request_file_list(request_ip) do
-    GenServer.call({:global, __MODULE__}, {:request_file_list, request_ip})
+  def request_file_list() do
+    GenServer.call({:global, __MODULE__}, {:request_file_list})
+  end
+
+  def request_file(request_ip, file, version) do
+    GenServer.call({:global, __MODULE__}, {:request_file, request_ip, file, version})
+  end 
+
+  def receive_file(file, version, file_data) do
+    GenServer.call({:global, __MODULE__}, {:receive_file, file, version, file_data})
   end
 
   def list_clients do
@@ -56,12 +64,45 @@ defmodule Server.CentralServer do
   end
 
   @impl true
-  def handle_call({:request_file_list, request_ip}, _from, state) do
-    IO.puts("Broadcasting 'list_local_files' request to all client...")
+  def handle_call({:request_file, request_ip, file, version}, _from, state) do
+    IO.puts("Broadcasting request for file '#{file} version #{version}...")
 
-    new_state = %{
-      state | request_results: %{}, current_request: request_ip
-    }
+    state.clients
+    |> Enum.each(fn {_client_id, %{ip: ip}} -> 
+      url = "http://#{ip}:4000/api/get-file"
+      body = Jason.encode!(%{file: file, version: version})
+
+      Task.start(fn -> 
+        HTTPoison.post(url, body, [{"Content-Type", "application/json"}])
+      end)
+    end)
+
+    new_state = %{state | current_request: request_ip}
+    {:reply, :ok, new_state}
+  end
+
+  @impl true
+  def handle_call({:receive_file, file, version, file_data}, _from, state) do
+    requester_ip = state.current_request
+    IO.puts("Received file '#{file}' version #{version}. Sending it to #{requester_ip}.")
+    url = "http://#{requester_ip}:4000/api/receive-file"
+    body = Jason.encode!(%{file: file, version: version, file_data: file_data})
+
+    case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
+      {:ok, %HTTPoison.Response{status_code: 200}} -> 
+        IO.puts("Successfully sent file to #{requester_ip}")
+      {:error, %HTTPoison.Error{reason: reason}} -> 
+        IO.puts("Failed to send file to #{requester_ip}. Reason: #{inspect(reason)}")
+    end
+
+    {:reply, :ok, state}
+  end
+
+  # Will ask all clients for their list of commits, wait for each (timeout 5s) then put all data togther
+  # and finally send back data to asking client
+  @impl true
+  def handle_call({:request_file_list}, _from, state) do
+    IO.puts("Broadcasting 'list_local_files' request to all client...")
 
     responses = 
       state.clients
@@ -97,7 +138,7 @@ defmodule Server.CentralServer do
 
     IO.puts("Aggregated file list: #{inspect(aggregated_files)}")
 
-    {:reply, aggregated_files, new_state}
+    {:reply, aggregated_files, state}
   end
 
   @impl true
