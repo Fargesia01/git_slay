@@ -79,6 +79,7 @@ defmodule Client.Backend do
 
   def commit(file) do
     remote_files = Application.get_env(:client, :remote_files)
+
     mr_v = String.to_integer(Map.get(remote_files, file, "-1")) + 1
 
     data =
@@ -90,12 +91,7 @@ defmodule Client.Backend do
 
     File.write(@filesPath <> "commit/#{file}#{@splitChars}#{mr_v}", data)
 
-    remote_files =
-      if Map.has_key?(remote_files, file) do
-        Map.put(remote_files, file, mr_v)
-      else
-        Map.put_new(remote_files, file, mr_v)
-      end
+    remote_files = Map.put(remote_files, file, mr_v)
 
     Application.put_env(:client, :remote_files, remote_files)
   end
