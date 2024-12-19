@@ -55,6 +55,11 @@ defmodule Client.Backend do
     end
   end
 
+  def put_in_local(file, ver, data) do
+    File.write(@filesPath <> "commit/#{file}#{@splitChars}#{ver}", data)
+    File.cp(@filesPath <> "commit/#{file}#{@splitChars}#{ver}", @filesPath <> "user/#{file}")
+  end
+
   def list_all_files do
     url = "http://192.168.1.11:5000/api/request-file-list"
     client_id = Application.get_env(:client, :client_id) || "unknown_client"
