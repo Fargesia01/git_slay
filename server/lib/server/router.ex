@@ -14,17 +14,17 @@ defmodule Server.Router do
   end
 
   post "/api/register" do
-    {:ok, body, _conn} = Plug.Conn.read_body(conn)
-    %{"ip" => ip} = Jason.decode!(body)
+    {:ok, _body, _conn} = Plug.Conn.read_body(conn)
+    ip = conn.remote_ip |> Tuple.to_list() |> Enum.join(".")
     client_id = Server.CentralServer.register_client(ip)
     send_resp(conn, 200, Jason.encode!(%{status: "ok", client_id: client_id}))
   end
 
   post "/api/request-file" do
+    ip = conn.remote_ip |> Tuple.to_list() |> Enum.join(".")
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
     %{"file" => file, "version" => version} = Jason.decode!(body)
     IO.puts("Request received for file: #{file} version: #{version}")
-    ip = "127.0.0.1"
 
     files = Server.CentralServer.request_file(ip, file, version)
     

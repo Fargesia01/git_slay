@@ -23,10 +23,11 @@ defmodule ClientWeb.PageController do
   end
 
   def pull_recent(conn, %{"file" => file}) do
+    ip = Application.get_env(:client, :server_ip)
     remote_files = Application.get_env(:client, :remote_files, %{})
     version = Map.get(remote_files, file, 0)
 
-    url = "http://192.168.1.11:5000/api/request-file"
+    url = "http://#{ip}:5000/api/request-file"
     body = Jason.encode!(%{file: file, version: version})
 
     case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
@@ -38,7 +39,8 @@ defmodule ClientWeb.PageController do
   end
 
   def pull_specific(conn, %{"file" => file, "version" => version}) do
-    url = "http://192.168.1.11:5000/api/request-file"
+    ip = Application.get_env(:client, :server_ip)
+    url = "http://#{ip}:5000/api/request-file"
     body = Jason.encode!(%{file: file, version: version})
 
     case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
@@ -50,12 +52,13 @@ defmodule ClientWeb.PageController do
   end
 
   def get_file(conn, %{"file" => file, "version" => version}) do
+    ip = Application.get_env(:client, :server_ip)
     IO.puts("Received request for file '#{file}' version #{version}.")
 
     file_data = Client.Backend.get_file(file, version)
     
     if file_data do
-      url = "http://192.168.1.11:5000/api/receive-file"
+      url = "http://#{ip}:5000/api/receive-file"
       body = Jason.encode!(%{file: file, version: version, file_data: file_data})
 
       case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
@@ -87,9 +90,10 @@ defmodule ClientWeb.PageController do
   # Unregister the client when app shuts down
   defp unregister_client do
     client_id = Application.get_env(:client, :client_id)
+    ip = Application.get_env(:client, :server_ip)
 
     if client_id do
-      url = "http://192.168.1.11:5000/api/unregister"
+      url = "http://#{ip}:5000/api/unregister"
       body = Jason.encode!(%{"client_id" => client_id})
 
       case HTTPoison.post(url, body, [{"Content-Type", "application/json"}]) do
