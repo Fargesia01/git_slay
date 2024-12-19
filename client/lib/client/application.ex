@@ -27,6 +27,8 @@ defmodule Client.Application do
 
   # Automatically registers the client on startup
   defp register_client do 
+    map = %{"project.ex" => 5}
+    Application.put_env(:client, :remote_files, map)
     ip  = "127.0.0.1"
     url = "http://192.168.1.11:5000/api/register"
 
